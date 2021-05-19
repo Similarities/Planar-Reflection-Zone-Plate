@@ -1,0 +1,16 @@
+__pycache__/
+.idea/
+/data
+/.pytest_cache
+/.idea
+/filter
+*/__pycache__
+/__pycache__
+*.logs
+.env
+*.png
+*.tiff
+*.tif
+*.xml
+
+
