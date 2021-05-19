@@ -11,13 +11,13 @@ import os
 # define two ROIS for RZP or one
 class ImagePreProcessing:
 
-    def __init__(self, picture, picture_name, background, background_name, roi_list):
+    def __init__(self, picture, picture_name, background_name, roi_list):
         self.filename = picture_name
         self.picture = picture
-        self.background = np.empty()
+        self.background = np.empty([])
         self.background_name = background_name
         # x1, y1, x2, y2
-        self.back_roi = np.empty()
+        self.back_roi = np.empty([])
         self.binned_roi_y = np.empty([])
         self.x_axis_eV = np.empty([])
         self.x_axis_nm = np.empty([])
@@ -27,11 +27,10 @@ class ImagePreProcessing:
         self.back_roi = roi
         self.background = image_array
         self.background_name = name
-        retrun self.back_roi, self.background_name, self.background
+        return self.back_roi, self.background_name, self.background
 
     def reference_scaling_for_background_image(self, image_array, roi, name):
-        self.load_background_image_and_roi()
-
+        self.load_background_image_and_roi(image_array, roi, name)
         # opens tif is flipped vertical, array_image[y:y1, x:x1] (warum auch immer....)
         subarray_reference = self.background[self.back_roi[1]:self.back_roi[3], self.back_roi[0]:self.back_roi[2]]
         subarray_picture = self.picture[self.back_roi[1]:self.back_roi[3], self.back_roi[0]:self.back_roi[2]]
@@ -42,7 +41,17 @@ class ImagePreProcessing:
         self.background[::] = self.background[::] * scaling_factor
         return self.background
 
-    def background_from_same_picture(self):
+    def background_from_same_picture(self, roilist_back):
+        self.back_roi = roilist_back
+        line_out_back_ground = np.sum(self.picture[self.back_roi[1]: self.back_roi[3], self.back_roi[0]: self.back_roi[2]], axis=0)
+        line_out_per_row = line_out_back_ground[:] / (self.back_roi[3]-self.back_roi[1])
+        x_axis = np.arange(0, self.back_roi[2]-self.back_roi[0])
+
+        plt.figure(101)
+        plt.plot(x_axis, line_out_per_row)
+
+        plt.figure(1)
+        plt.imshow(self.picture)
 
     def background_subtraction(self):
         for counter, x in enumerate(self.picture[0, ::]):
@@ -82,3 +91,15 @@ class ImagePreProcessing:
         plt.figure(8)
         plt.imshow(self.picture)
         plt.colorbar()
+
+
+path = "data/20210312/210312/45ms_center/210312_PM015844.tif"
+picture = basic_image_app.read_image(path)
+# sometimes python opens pictures differently then other editors (imageJ e.g.)
+picture = np.flip(picture, axis = 0)
+roi_list = ([750,516, 2048, 789])
+roi_list_back = ([750, 798, 2048, 951])
+Test = ImagePreProcessing(picture, "test", "on picture roi", roi_list)
+Test.background_from_same_picture(roi_list_back)
+
+plt.show()
